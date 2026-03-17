@@ -1,5 +1,15 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
+import { boardingSession } from "./pawfeed-schema";
+
+export const rolesEnum = pgEnum("roles", ["admin", "sitter"]);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -12,6 +22,10 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+
+  // PawFeed specific fields
+  role: rolesEnum().default("sitter"),
+  sitterBio: text("sitter_bio"),
 });
 
 export const session = pgTable(
@@ -76,6 +90,7 @@ export const verification = pgTable(
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  boardingSession: many(boardingSession),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
