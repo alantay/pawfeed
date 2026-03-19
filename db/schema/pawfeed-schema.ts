@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
-import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+
 import { user } from "./auth-schema";
 
 export const boardingStatusEnum = pgEnum("boardingStatus", [
@@ -9,11 +10,15 @@ export const boardingStatusEnum = pgEnum("boardingStatus", [
 ]);
 
 export const boardingSession = pgTable("boardingSession", {
-  id: text("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   sitterId: text("sitter_id").notNull(),
-  shareToken: text("share_token").notNull(),
+  ownerName: text("owner_name").notNull(),
+  shareToken: text("share_token")
+    .notNull()
+    .$defaultFn(() => crypto.randomUUID()),
   checkIn: timestamp("check_in").notNull(),
   checkOut: timestamp("check_out").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const timelineUpdate = pgTable("timelineUpdate", {
