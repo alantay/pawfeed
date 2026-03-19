@@ -1,10 +1,3 @@
-<<<<<<< Updated upstream
-export default function Home() {
-  return (
-    <div className="px-6 py-4 text-bo">
-      <main>A dedicated timeline for professional pet boarding updates.</main>
-    </div>
-=======
 import { auth } from "@/lib/auth-server";
 import { headers } from "next/headers";
 import Image from "next/image";
@@ -49,6 +42,5 @@ export default async function Home() {
       </div>
       <Link href="/login">Login</Link>
     </main>
->>>>>>> Stashed changes
   );
 }
