@@ -19,6 +19,9 @@ export const profileSchema = z.object({
 export const boardingSchema = z
   .object({
     ownerName: z.string().min(3, "Name is required"),
+    petNames: z
+      .array(z.string().min(1, "Pet name cannot be empty"))
+      .min(1, "At least one pet name is required"),
     checkIn: z.coerce.date().refine(
       (date) => {
         const today = new Date();

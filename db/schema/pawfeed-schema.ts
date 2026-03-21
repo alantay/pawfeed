@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { user } from "./auth-schema";
@@ -9,10 +9,21 @@ export const boardingStatusEnum = pgEnum("boardingStatus", [
   "completed",
 ]);
 
+export const activityEnum = pgEnum("activity", [
+  "playing",
+  "walking",
+  "eating",
+  "general",
+]);
+
 export const boardingSession = pgTable("boardingSession", {
   id: uuid("id").primaryKey().defaultRandom(),
   sitterId: text("sitter_id").notNull(),
   ownerName: text("owner_name").notNull(),
+  petNames: text("pet_names")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   shareToken: text("share_token")
     .notNull()
     .$defaultFn(() => crypto.randomUUID()),
@@ -23,10 +34,12 @@ export const boardingSession = pgTable("boardingSession", {
 
 export const timelineUpdate = pgTable("timelineUpdate", {
   id: text("id").primaryKey(),
-  boardingSessionId: text("boarding_session_id").notNull(),
+  boardingSessionId: uuid("boarding_session_id")
+    .notNull()
+    .references(() => boardingSession.id, { onDelete: "cascade" }),
   imageUrl: text("image_url"),
-  imageCaption: text("image_caption"),
   description: text("description"),
+  activity: activityEnum("activity").notNull().default("general"),
   title: text("title"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
