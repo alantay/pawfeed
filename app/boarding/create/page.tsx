@@ -1,5 +1,5 @@
 "use client";
-import { createBoardingSession } from "@/app/actions/user";
+import { createBoardingSession } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -10,17 +10,33 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { useActionState, useState } from "react";
 
 export default function createBoardingPage() {
   const [checkInDate, setCheckInDate] = useState<Date>();
   const [checkOutDate, setCheckOutDate] = useState<Date>();
+  const [petNames, setPetNames] = useState<string[]>([""]);
   const [error, action, pending] = useActionState(createBoardingSession, null);
 
   const handleReset = () => {
     setCheckInDate(undefined);
     setCheckOutDate(undefined);
+  };
+
+  const addPet = () => setPetNames([...petNames, ""]);
+
+  const removePet = (index: number) => {
+    if (petNames.length > 1) {
+      const newPetNames = [...petNames];
+      newPetNames.splice(index, 1);
+      setPetNames(newPetNames);
+    }
+  };
+  const handlePetNameChange = (index: number, value: string) => {
+    const newPetNames = [...petNames];
+    newPetNames[index] = value;
+    setPetNames(newPetNames);
   };
 
   return (
@@ -38,6 +54,7 @@ export default function createBoardingPage() {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
+                  type="button"
                   data-empty={!checkInDate}
                   className="w-[212px] justify-between text-left font-normal data-[empty=true]:text-muted-foreground"
                 >
@@ -71,6 +88,7 @@ export default function createBoardingPage() {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
+                  type="button"
                   data-empty={!checkOutDate}
                   className="w-[212px] justify-between text-left font-normal data-[empty=true]:text-muted-foreground"
                 >
@@ -101,6 +119,45 @@ export default function createBoardingPage() {
               value={checkOutDate?.toISOString() || ""}
             />
           </Field>
+          <div>
+            {petNames.map((pn, index) => {
+              return (
+                <div key={index}>
+                  <Field className="mb-4 ">
+                    <FieldLabel htmlFor={`petName-${index}`}>
+                      Pet {index + 1} name
+                    </FieldLabel>
+                    <div className="flex gap-2">
+                      <Input
+                        value={pn}
+                        onChange={(e) =>
+                          handlePetNameChange(index, e.target.value)
+                        }
+                        required
+                        id={`petName-${index}`}
+                        name="petNames"
+                        className="max-w-120"
+                      />
+                      <Button
+                        type="button"
+                        variant={"ghost"}
+                        onClick={() => removePet(index)}
+                      >
+                        <TrashIcon />
+                      </Button>
+                    </div>
+                  </Field>
+                  {index === petNames.length - 1 ? (
+                    <Button type="button" onClick={addPet}>
+                      <PlusIcon />
+                      Add pet
+                    </Button>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+
           <Field orientation="horizontal">
             <Button type="submit">Submit</Button>
             <Button variant="outline" type="reset" onClick={handleReset}>

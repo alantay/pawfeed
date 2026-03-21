@@ -1,13 +1,12 @@
 "use server";
 import { db } from "@/db";
-import { boardingSession, user } from "@/db/schema";
+import { user } from "@/db/schema";
 import { auth } from "@/lib/auth-server";
-import { boardingSchema, profileSchema } from "@/types";
+import { profileSchema } from "@/types";
 import { put } from "@vercel/blob";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import * as z from "zod";
 
 export async function updateProfile(prevState: any, formData: FormData) {
   const session = await auth.api.getSession({
@@ -50,43 +49,5 @@ export async function updateProfile(prevState: any, formData: FormData) {
 
   await db.update(user).set(toUpdate).where(eq(user.id, session.user.id));
   revalidatePath("/profile/edit");
-  return { success: true };
-}
-
-export async function createBoardingSession(
-  prevState: any,
-  formData: FormData,
-) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) throw new Error("Unauthorized");
-
-  const parsedData = boardingSchema.safeParse({
-    ownerName: formData.get("ownerName"),
-    checkIn: formData.get("checkIn"),
-    checkOut: formData.get("checkOut"),
-  });
-
-  if (!parsedData.success) {
-    // result.error contains the type-safe validation errors
-    const flattenedErrors = z.flattenError(parsedData.error);
-    return {
-      success: false,
-      errors: flattenedErrors.fieldErrors, // Specific field errors
-      formErrors: flattenedErrors.formErrors, // Top-level errors (like your date comparison)
-    };
-  }
-
-  const { ownerName, checkIn, checkOut } = parsedData.data;
-
-  await db.insert(boardingSession).values({
-    sitterId: session.user.id,
-    ownerName,
-    checkIn,
-    checkOut,
-  });
-  revalidatePath("/");
   return { success: true };
 }
