@@ -13,11 +13,42 @@ import { format } from "date-fns";
 import { ChevronDownIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { useActionState, useState } from "react";
 
+interface ActionState {
+  success: boolean; // Remove the '?' - make it mandatory
+  errors?: {
+    ownerName?: string[];
+    petNames?: string[];
+    checkIn?: string[];
+    checkOut?: string[];
+  };
+  formErrors?: string[]; // Add this to match Zod's flatten output
+  fields?: {
+    ownerName: string;
+    petNames: string[];
+    checkIn: string;
+    checkOut: string;
+  };
+}
+// 2. Use this complete object as the initial state
+const initialState: ActionState = {
+  success: false,
+  errors: {},
+  formErrors: [],
+  fields: {
+    ownerName: "",
+    petNames: [""],
+    checkIn: "",
+    checkOut: "",
+  },
+};
 export default function createBoardingPage() {
   const [checkInDate, setCheckInDate] = useState<Date>();
   const [checkOutDate, setCheckOutDate] = useState<Date>();
   const [petNames, setPetNames] = useState<string[]>([""]);
-  const [error, action, pending] = useActionState(createBoardingSession, null);
+  const [error, action, pending] = useActionState(
+    createBoardingSession,
+    initialState,
+  );
 
   const handleReset = () => {
     setCheckInDate(undefined);
@@ -46,7 +77,12 @@ export default function createBoardingPage() {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="ownerName">Owner's name</FieldLabel>
-            <Input required name="ownerName" className="max-w-120" />
+            <Input
+              defaultValue={error.fields?.ownerName}
+              required
+              name="ownerName"
+              className="max-w-120"
+            />
           </Field>
           <Field className="w-44">
             <FieldLabel htmlFor="date-picker-simple">Check-In Date</FieldLabel>
