@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth-server";
 import { boardingSchema } from "@/types";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import * as z from "zod";
 
 export async function createBoardingSession(
@@ -26,24 +27,35 @@ export async function createBoardingSession(
 
   console.log({ parsedData });
   if (!parsedData.success) {
+    console.log("oooo", formData.get("ownerName"));
     // result.error contains the type-safe validation errors
     const flattenedErrors = z.flattenError(parsedData.error);
     return {
       success: false,
       errors: flattenedErrors.fieldErrors, // Specific field errors
       formErrors: flattenedErrors.formErrors, // Top-level errors (like your date comparison)
+      fields: {
+        ownerName: formData.get("ownerName") as string,
+        petNames: formData.getAll("petNames") as string[],
+        checkIn: formData.get("checkIn") as string,
+        checkOut: formData.get("checkOut") as string,
+      },
     };
   }
 
   const { ownerName, checkIn, checkOut, petNames } = parsedData.data;
 
-  await db.insert(boardingSession).values({
-    sitterId: session.user.id,
-    ownerName,
-    checkIn,
-    checkOut,
-    petNames,
-  });
+  const [inserted] = await db
+    .insert(boardingSession)
+    .values({
+      sitterId: session.user.id,
+      ownerName,
+      checkIn,
+      checkOut,
+      petNames,
+    })
+    .returning({ id: boardingSession.id });
   revalidatePath("/");
-  return { success: true };
+
+  redirect(`/boarding/${inserted.id}`);
 }
